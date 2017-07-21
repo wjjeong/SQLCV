@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>나눔고딕</family>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>SQL컨버전 프로그램</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/img/img/database_sql01.png</normaloff>:/img/img/database_sql01.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <widget class="QFrame" name="sqlMngFrame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout" columnstretch="3,0">
+       <item row="0" column="1">
+        <widget class="QWidget" name="sqlMngSqlViewer" native="true">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="lblSqlMngAsisSQL">
+            <property name="text">
+             <string notr="true">ASIS SQL</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QTextBrowser" name="txbSqlMngAsisSQL"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="lblSqlMngTobeSQL">
+            <property name="text">
+             <string notr="true">TOBE SQL</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QTextBrowser" name="txbSqlMngTobeSQL"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lblExcelUpload">
+         <property name="text">
+          <string>SQL파일 업로드</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_2">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <item>
+                  <widget class="QLabel" name="lblSqlMngQryCl">
+                   <property name="text">
+                    <string>쿼리분류</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="cbSqlMngQryCl">
+                   <item>
+                    <property name="text">
+                     <string>전체</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>SELECT</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>INSERT</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>UPDATE</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>DELETE</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>MERGE</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lblSqlMngSqlId">
+                   <property name="text">
+                    <string>SQL 아이디</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="leSqlMngSqlId">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <item>
+                  <widget class="QLabel" name="lblSqlMngConYn">
+                   <property name="text">
+                    <string>컨버전여부</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="cbSqlMngConYn">
+                   <item>
+                    <property name="text">
+                     <string>전체</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Y</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>N</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lblSqlMngConDate">
+                   <property name="text">
+                    <string>컨버전일시</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="cbSqlMngConDate">
+                   <item>
+                    <property name="text">
+                     <string>전체</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>컨버전 후 매핑작업</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btnSqlMngSearch">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>검색</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tblwSqlMngSqlList">
+           <column>
+            <property name="text">
+             <string>선택</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>파일명</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>SQL ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>쿼리분류</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>컨버전</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>컨버전일시</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string notr="true">엑셀다운로드</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_2">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="text">
+              <string notr="true">컨버전실행</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLineEdit" name="leExcelPath">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string notr="true">엑셀 파일을 선택해주세요</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnExcelOpen">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string notr="true">파일선택</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnSampleExcel">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string notr="true">샘플파일</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionConn">
+   <property name="text">
+    <string notr="true">Connection</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string notr="true">Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionTableMapp">
+   <property name="text">
+    <string notr="true">테이블매핑</string>
+   </property>
+  </action>
+  <action name="actionColumnMapp">
+   <property name="text">
+    <string notr="true">컬럼매핑</string>
+   </property>
+  </action>
+  <action name="actionSqlMng">
+   <property name="text">
+    <string notr="true">SQL관리</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+ <connections/>
+</ui>

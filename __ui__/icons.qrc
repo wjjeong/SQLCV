@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="img">
+    <file>img/database_sql01.png</file>
+    <file>img/excel02.png</file>
+    <file>img/exit24.png</file>
+    <file>img/filter01.png</file>
+    <file>img/nwindow02.png</file>
+  </qresource>
+</RCC>
