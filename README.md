@@ -1,0 +1,7 @@
+# SQLCV
+sql conversion program
+
+LANGUAGE : PYTHON
+REPOSTORY DB : POSTGRESQL 9.6
+
+
