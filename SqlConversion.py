@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import datetime
 
 import psycopg2
 import psycopg2.extras
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QFileDialog, QMessageBox, QAbstractItemView)
-from openpyxl import (load_workbook)
+from openpyxl import (load_workbook, Workbook)
 
 from utils import dbconn
 
@@ -18,58 +19,59 @@ class MyWindow(QMainWindow, form_class):
         super().__init__()
         self.setupUi(self)
 
-        #action 트리거 정의
-        #self.actionTableMapp.triggered.connect(self.selMenuMapp)
-        #self.actionColumnMapp.triggered.connect(self.selMenuMapp)
-        #self.actionSqlMng.triggered.connect(self.selMenuSqlMng)
-
         #button 클릭 정의
         self.btnSqlMngSearch.clicked.connect(self.searchSql)
-        self.btnExcelOpen.clicked.connect(self.openSqlInsertExcel)
+        self.btnSaveSqlInsertExcel.clicked.connect(self.saveSqlInsertExcel)
+        self.btnDownSqlUploadExcelSample.clicked.connect(self.downSqlUploadExcelSample)
+        self.btnDownSqlListExcel.clicked.connect(self.downSqlListExcel)
 
         #TableWidget 클릭 연결
         self.tblwSqlMngSqlList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tblwSqlMngSqlList.itemClicked.connect(self.handleItemClicked)
         self.tblwSqlMngSqlList.doubleClicked.connect(self.handleItemDoubleClicked)
 
-    def selMenuSqlMng(self):
-        if self.sqlMngFrame.setVisible == False:
-            self.sqlMngFrame.setVisible(True);
-
-        if(self.tblwSqlMngSqlList.rowCount() == 0):
-            self.searchSql()
-
-    def selMenuMapp(self):
-        self.sqlMngFrame.setVisible(False);
-
     def setColortoRow(self, table, rowIndex, color):
         for j in range(table.columnCount()):
             table.item(rowIndex, j).setBackground(color)
 
-    def searchSql(self):
-        tblSqlList = self.tblwSqlMngSqlList
-        tblSqlList.setRowCount(0)
-
-        valQryCl   = self.cbSqlMngQryCl.currentText()
-        valSqlId   = self.leSqlMngSqlId.text()
-        valConYn   = self.cbSqlMngConYn.currentText()
+    def getSqlList(self, listType=1):
+        valQryCl = self.cbSqlMngQryCl.currentText()
+        valSqlId = self.leSqlMngSqlId.text()
+        valConYn = self.cbSqlMngConYn.currentText()
         valConDate = self.cbSqlMngConDate.currentText()
 
-        if valQryCl   == "전체": valQryCl = "";
-        if valConYn   == "전체": valConYn = "";
+        if valQryCl == "전체": valQryCl = "";
+        if valConYn == "전체": valConYn = "";
         if valConDate == "전체": valConDate = "";
 
         try:
             con = dbconn.createConnection('PGS')
             cur = con.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-            qrystr = """SELECT 
-	                        A.file_nm, A.sql_id, A.job_cl, A.qry_cl, 
-                            (CASE A.wk_stat_cd WHEN 'C' THEN 'Y' ELSE 'N' END) AS convert_yn,
-	                        TO_CHAR(A.rgs_dttm, 'YYYY.MM.DD HH24:MI') as rgs_dttm
-	                    FROM
-	                    	B2EN_SC_SQL_LIST A
-	                    where 1=1"""
+            if listType == 1:
+                qrystr = """SELECT 
+                                A.file_nm, A.sql_id, A.job_cl, A.qry_cl, 
+                                (CASE A.wk_stat_cd WHEN 'C' THEN 'Y' ELSE 'N' END) AS convert_yn,
+                                TO_CHAR(A.rgs_dttm, 'YYYY.MM.DD HH24:MI') as rgs_dttm
+                            FROM
+                                B2EN_SC_SQL_LIST A
+                            where 1=1"""
+            elif listType == 2:
+                qrystr = """SELECT 
+                                A.file_nm, A.sql_id, A.job_cl, A.qry_cl, 
+                                (CASE A.wk_stat_cd WHEN 'C' THEN 'Y' ELSE 'N' END) AS convert_yn,
+                                /*string_agg(B.sql_text, chr(10) order by B.line asc) as asis_sql,
+                                string_agg(C.sql_text, chr(10) order by C.line asc) as tobe_sql,
+                                */
+                                ' ' as asis_sql,
+                                ' ' as tobe_sql,
+                                TO_CHAR(A.rgs_dttm, 'YYYY.MM.DD HH24:MI') as rgs_dttm
+                            FROM
+                                B2EN_SC_SQL_LIST A
+                                INNER JOIN B2EN_SC_SQL_TEXT B ON A.file_nm = B.file_nm AND A.sql_id = B.sql_id
+                                LEFT OUTER JOIN B2EN_SC_SQL_TEXT_RST C on B.file_nm = C.file_nm and B.sql_id = C.sql_id and B.line = C.line
+                            where 1=1"""
+
             if valQryCl != "":
                 qrystr += " and A.qry_cl = '{0}'".format(valQryCl);
 
@@ -85,6 +87,9 @@ class MyWindow(QMainWindow, form_class):
                 # 어떤 조건이 포함되어야 하는지 확인 필요
                 qrystr += " and 1=1";
 
+            if listType == 2:
+                qrystr += " GROUP BY A.file_nm, A.sql_id, A.job_cl, A.qry_cl, A.wk_stat_cd, A.rgs_dttm"
+
             print(qrystr)
 
             cur.execute(qrystr)
@@ -95,6 +100,14 @@ class MyWindow(QMainWindow, form_class):
         finally:
             con.close()
             con = None
+
+        return rows
+
+    def searchSql(self):
+        tblSqlList = self.tblwSqlMngSqlList
+        tblSqlList.setRowCount(0)
+
+        rows = self.getSqlList(1)
 
         # itemList = [ \
         #     {'fileName': 'selx.xml', 'sqlId': 'selx.selUserList', 'sqlCl': 'SELECT', 'conversionYN': 'Y',
@@ -174,7 +187,7 @@ class MyWindow(QMainWindow, form_class):
         print(item.row(),"가 더블클릭 되었습니다")
 
     #SQL 엑셀 업로드
-    def openSqlInsertExcel(self):
+    def saveSqlInsertExcel(self):
         fname = QFileDialog.getOpenFileName(self, '엑셀파일 선택', '', '');
 
         if fname[0]:
@@ -254,6 +267,43 @@ class MyWindow(QMainWindow, form_class):
 
 
         return recList
+
+    def downSqlUploadExcelSample(self):
+        bufSize = 1024
+
+        fileName = QFileDialog.getSaveFileName(self, "saveFile", "./SQLUploadSample.xlsx")
+        print(fileName[0])
+        #출력파일 체크
+        if fileName[0] != '':
+            f = open('SQLUploadSample.xlsx', 'rb')
+            h = open(fileName[0], 'wb')
+            data = f.read(bufSize)
+            while data:
+                h.write(data)
+                data = f.read(bufSize)
+
+            f.close()
+            h.close()
+
+    def downSqlListExcel(self):
+        rows = self.getSqlList(2)
+        now = datetime.datetime.now()
+
+        fileName = QFileDialog.getSaveFileName(self, "saveFile", "./SQLData_"+now.strftime('%Y%m%d')+".xlsx")
+
+        if fileName[0] != '':
+            wb = Workbook()
+            ws1 = wb.active
+            ws1.title = "SQL data"
+            ws1.append({"파일명", "SQL ID", "업무구분", "쿼리구분", "컨버전여부", "ASIS SQL", "TOBE SQL", "등록일시"})
+
+            for row in rows:
+                ws1.append(row)
+
+            wb.save(filename=fileName[0])
+
+
+
 
 if __name__ == "__main__":
     import sys

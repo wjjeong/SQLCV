@@ -269,7 +269,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="btnDownSqlListExcel">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
@@ -279,7 +279,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="btnActSQLConversion">
              <property name="cursor">
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
@@ -308,7 +308,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="btnExcelOpen">
+          <widget class="QPushButton" name="btnSaveSqlInsertExcel">
            <property name="cursor">
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
@@ -318,7 +318,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="btnSampleExcel">
+          <widget class="QPushButton" name="btnDownSqlUploadExcelSample">
            <property name="cursor">
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
