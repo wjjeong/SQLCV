@@ -201,7 +201,6 @@ class MyWindow(QMainWindow, form_class):
                       .format(excelRow['fileNm'], excelRow['sqlId'], lineNum, excelRow['sqlText']))
                 lineNum += 1
 
-
     def getExcelData(self, workbook, columnDictionary, SheetName='Sheet1'):
         ws = workbook.get_sheet_by_name(SheetName)
         last_row = ws.max_row
