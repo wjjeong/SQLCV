@@ -9,6 +9,7 @@ CREATE TABLE public.b2en_sc_col_alias (
 WITH (
 	OIDS=FALSE
 ) ;
+
 CREATE INDEX b2en_sc_col_alias_pk ON public.b2en_sc_col_alias (file_nm DESC,sql_id DESC,column_nm DESC,set_lvl DESC,set_seq DESC) ;
 
 CREATE TABLE public.b2en_sc_col_map (
