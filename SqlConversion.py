@@ -60,11 +60,8 @@ class MyWindow(QMainWindow, form_class):
                 qrystr = """SELECT 
                                 A.file_nm, A.sql_id, A.job_cl, A.qry_cl, 
                                 (CASE A.wk_stat_cd WHEN 'C' THEN 'Y' ELSE 'N' END) AS convert_yn,
-                                /*string_agg(B.sql_text, chr(10) order by B.line asc) as asis_sql,
+                                string_agg(B.sql_text, chr(10) order by B.line asc) as asis_sql,
                                 string_agg(C.sql_text, chr(10) order by C.line asc) as tobe_sql,
-                                */
-                                ' ' as asis_sql,
-                                ' ' as tobe_sql,
                                 TO_CHAR(A.rgs_dttm, 'YYYY.MM.DD HH24:MI') as rgs_dttm
                             FROM
                                 B2EN_SC_SQL_LIST A
@@ -295,10 +292,27 @@ class MyWindow(QMainWindow, form_class):
             wb = Workbook()
             ws1 = wb.active
             ws1.title = "SQL data"
-            ws1.append({"파일명", "SQL ID", "업무구분", "쿼리구분", "컨버전여부", "ASIS SQL", "TOBE SQL", "등록일시"})
+            ws1["A1"].value = "파일명"
+            ws1["B1"].value = "SQL ID"
+            ws1["C1"].value = "업무구분"
+            ws1["D1"].value = "쿼리구분"
+            ws1["E1"].value = "컨버전여부"
+            ws1["F1"].value = "ASIS SQL"
+            ws1["G1"].value = "TOBE SQL"
+            ws1["H1"].value = "등록일시"
 
+            i = 2
             for row in rows:
-                ws1.append(row)
+                ws1["A" + str(i)].value = row.get("file_nm")
+                ws1["B" + str(i)].value = row.get("sql_id")
+                ws1["C" + str(i)].value = row.get("job_cl")
+                ws1["D" + str(i)].value = row.get("qry_cl")
+                ws1["E" + str(i)].value = row.get("convert_yn")
+                ws1["F" + str(i)].value = row.get("asis_sql")
+                ws1["G" + str(i)].value = row.get("tobe_sql")
+                ws1["H" + str(i)].value = row.get("rgs_dttm")
+
+                i += 1
 
             wb.save(filename=fileName[0])
 
