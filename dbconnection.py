@@ -19,28 +19,50 @@ class MyWindow(QMainWindow, form_class, DBase):
             # self.cur = DBase.cursor(self)
             self.setupUi(self)
 
-            config = configparser.ConfigParser()
-            config.read('config.ini')
-
-            logging.debug(config['DBINFO']['host'])
-
-            getHost = config['DBINFO']['host']    # config.ini에 DBINFO 섹션을 읽어옴
-            getDbname = config['DBINFO']['dbname']
-            getPort = config['DBINFO']['port']
-            getUser = config['DBINFO']['user']
-            getPassword = config['DBINFO']['password']
-
-            self.lineEdit.setText(getHost)           # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
-            self.lineEdit_2.setText(getDbname)
-            self.lineEdit_3.setText(getPort)
-            self.lineEdit_4.setText(getUser)
-            self.lineEdit_5.setText(getPassword)
-
             #설정된 경로가 존재하는지 확인하는 함수(있다면 자동연결, 없을 시 환경설정 창 띄우기)
             if os.path.exists("C:\Program Files\PostgreSQL") :
                 print("PostgreSQL 설치 확인완료")
+
+                if os.path.exists("config.ini") :
+                    config = configparser.ConfigParser()
+                    config.read('config.ini')
+
+                    logging.debug(config['DBINFO']['host'])
+
+                    getHost = config['DBINFO']['host']  # config.ini에 DBINFO 섹션을 읽어옴
+                    getDbname = config['DBINFO']['dbname']
+                    getPort = config['DBINFO']['port']
+                    getUser = config['DBINFO']['user']
+                    getPassword = config['DBINFO']['password']
+
+                    self.lineEdit.setText(getHost)  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
+                    self.lineEdit_2.setText(getDbname)
+                    self.lineEdit_3.setText(getPort)
+                    self.lineEdit_4.setText(getUser)
+                    self.lineEdit_5.setText(getPassword)
+
+                    print("config.ini 파일 있음")
+
+                else :
+                    fw = open('config.ini', 'w')
+                    fw.write('[DBINFO]\n')
+                    fw.write('host = localhost\n')
+                    fw.write('dbname = postgres\n')
+                    fw.write('port = 5432\n')
+                    fw.write('user = postgres\n')
+                    fw.write('password = 1234\n')
+                    fw.close
+
+                    self.lineEdit.setText("localhost")  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
+                    self.lineEdit_2.setText("postgres")
+                    self.lineEdit_3.setText("5432")
+                    self.lineEdit_4.setText("postgres")
+                    self.lineEdit_5.setText("1234")
+
+                    print("config.ini 파일 없어서 새로 생성")
             else :
                 print("PostgreSQL 설치 안됨")
+                QMessageBox.about(self, "오류", "PostgreDB가 설치되어 있지 않습니다.")
 
             self.pushButton.clicked.connect(self.dbconnect)
         except:
