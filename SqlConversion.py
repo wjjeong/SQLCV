@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QFileDialog, QMessageBox, QAbstractItemView)
 from openpyxl import (load_workbook, Workbook)
 
-from utils import dbconn
+from utils import (dbconn, commfunc)
 
 ui_folder = os.path.abspath(os.path.dirname('__ui__/'))
 form_class = uic.loadUiType(os.path.join(ui_folder, "SqlConversion.ui"))[0]
@@ -83,6 +83,9 @@ class MyWindow(QMainWindow, form_class):
             if valConDate != "":
                 # 어떤 조건이 포함되어야 하는지 확인 필요
                 qrystr += " and 1=1";
+
+            if listType == 1:
+                qrystr += " ORDER BY A.rgs_dttm DESC"
 
             if listType == 2:
                 qrystr += " GROUP BY A.file_nm, A.sql_id, A.job_cl, A.qry_cl, A.wk_stat_cd, A.rgs_dttm"
@@ -186,6 +189,7 @@ class MyWindow(QMainWindow, form_class):
     #SQL 엑셀 업로드
     def saveSqlInsertExcel(self):
         fname = QFileDialog.getOpenFileName(self, '엑셀파일 선택', '', '');
+        boolInsertSuccess = False
 
         if fname[0]:
             wb = load_workbook(filename=fname[0])
@@ -195,75 +199,79 @@ class MyWindow(QMainWindow, form_class):
                             {'colName': 'jobCl',  'colMandatoryYN': 'N', 'colMaxLength': '1'}, \
                             {'colName': 'sqlText', 'colMandatoryYN': 'Y', 'colMaxLength': '100'} \
                 ]
-            excelRows = self.getExcelData(wb, colDict)
+            excelRows = commfunc.getExcelData(wb, colDict)
 
-            sqlList = []
-            lineNum = 1
+            sqlList = []  # sql-list 데이터
+            sqlTextList = []  # sqlText의 리스트(쿼리별)
+            sqlFullList = []  # sql + 실제쿼리 데이터
+            lineNum = 1  # 각 쿼리별 line
+            sqlidx = -1  # sql-list index
+
+            # 엑셀 ROW를 돌면서 data-set 만들기
             for excelRow in excelRows:
-                sqlRec = {'fileNm': excelRow['fileNm'], 'sqlId': excelRow['sqlId'], 'jobCl': excelRow['jobCl']};
-                if sqlRec not in sqlList:
-                    sqlList.append(sqlRec)
-                    print(
-                        "insert into B2EN_SC_SQL_LIST (file_nm, sql_id, job_cl) values ('{0}','{1}','{2}')".format(
-                            excelRow['fileNm'], excelRow['sqlId'], excelRow['jobCl']))
+                ##해당 ROW가 쿼리의 첫 라인일 경우
+                if {'fileNm': excelRow['fileNm'], 'sqlId': excelRow['sqlId'], 'jobCl': excelRow['jobCl']} not in sqlList:
+                    sqlidx += 1
+                    sqlTextList = []
+                    sqlList.append({'fileNm': excelRow['fileNm'], 'sqlId': excelRow['sqlId'], 'jobCl': excelRow['jobCl']})
+                    sqlFullList.append({'fileNm': excelRow['fileNm'], 'sqlId': excelRow['sqlId'], 'jobCl': excelRow['jobCl'],'sqlTextList': sqlTextList})
+
+                sqlTextList.append(excelRow['sqlText'])
+                sqlFullList[sqlidx]["sqlTextList"] = sqlTextList
+
+            try:
+                con = dbconn.createConnection('PGS')
+                cur = con.cursor()
+
+                for sqlRec in sqlFullList:
+                    fileNm      = sqlRec['fileNm']
+                    sqlId       = sqlRec['sqlId']
+                    jobCl       = sqlRec['jobCl']
+                    sqlTextList = sqlRec['sqlTextList']
+
+                    ## B2EN_SC_SQL_LIST에서 해당 쿼리 삭제
+                    cur.execute("DELETE FROM B2EN_SC_SQL_LIST WHERE file_nm = %s and sql_id = %s", (fileNm, sqlId))
+
+                    ## B2EN_SC_SQL_TEXT에서 해당 쿼리의 전체 데이터 삭제
+                    cur.execute("DELETE FROM B2EN_SC_SQL_TEXT WHERE file_nm = %s and sql_id = %s", (fileNm, sqlId))
+
+                    qryFullStr = ""
+                    ## sqlTextList를 돌면서
+                    for qryLineStr in sqlRec["sqlTextList"]:
+                        if qryFullStr == "":
+                            qryFullStr +=  qryLineStr;
+                        else :
+                            qryFullStr += "\n" + qryLineStr;
+
+                    ## B2EN_SC_SQL_LIST 테이블에 입력
+                    cur.execute("insert into B2EN_SC_SQL_LIST (file_nm, sql_id, job_cl, qry_cl, wk_stat_cd, rgs_dttm) values (%s, %s, %s, %s, 'R', now())", \
+                             (fileNm, sqlId, jobCl, 'SELECT'))
+
                     lineNum = 1
-                print("insert into B2EN_SC_SQL_TEXT (file_nm, sql_id, line, sql_text) values ('{0}','{1}','{2}', '{3}')"
-                      .format(excelRow['fileNm'], excelRow['sqlId'], lineNum, excelRow['sqlText']))
-                lineNum += 1
+                    for qryLineStr in sqlTextList:
+                        ### B2EN_SC_SQL_TEXT에 ROW-DATA 입력
+                        cur.execute("insert into B2EN_SC_SQL_TEXT (file_nm, sql_id, line, sql_text) values (%s, %s, %s, %s)", \
+                                 (fileNm, sqlId, lineNum, qryLineStr))
 
-    def getExcelData(self, workbook, columnDictionary, SheetName='Sheet1'):
-        ws = workbook.get_sheet_by_name(SheetName)
-        last_row = ws.max_row
+                        lineNum += 1
+                con.commit()
+                boolInsertSuccess = True
+            except Exception as e:
+                print("Exception 발생 : ", e);
+                sys.exit(app.exec())
+            finally:
+                con.close()
+                con = None
 
-        #반환 리스트
-        recList = []
+        if boolInsertSuccess == True:
+            QMessageBox.information(self, 'SQL Insert Success', "SQL 파일 업로드가 완료되었습니다.",
+                                               QMessageBox.Ok, QMessageBox.Ok)
+            self.cbSqlMngQryCl.setCurrentIndex(0)
+            self.leSqlMngSqlId.setText("")
+            self.cbSqlMngConYn.setCurrentIndex(2)
+            self.cbSqlMngConDate.setCurrentIndex(0)
 
-        #엑셀 정합성 체크
-        validExcel = True;
-        errType = 0;
-        errColumns = ""
-        for xlrow in ws.iter_rows(row_offset=1):
-            if xlrow[0].row > last_row:break;
-            else:
-                col_idx = 0
-                for cell in xlrow:
-                    if columnDictionary[col_idx]['colMandatoryYN'] == 'Y' and (cell.value == None or cell.value == ''):
-                        validExcel = False
-                        errType = 1
-                        errColumns += ", " + cell.column + str(cell.row)
-                    elif int(columnDictionary[col_idx]['colMaxLength']) > 0 and len(cell.value) > int(columnDictionary[col_idx]['colMaxLength']):
-                        validExcel = False
-                        errType = 2
-                        errColumns += ", " + cell.column + str(cell.row)
-
-                    col_idx += 1
-
-        if validExcel == False:
-            if errType == 1:
-                QMessageBox.warning(None, "엑셀파일 에러",
-                                  "엑셀업로드에 에러가 발생하였습니다.\n\n"
-                                  "{0} Cell은 빈값을 허용하지 않습니다.".format(errColumns[2:]),
-                                  QMessageBox.Close)
-            elif errType == 2:
-                QMessageBox.warning(None, "엑셀파일 에러",
-                                    "엑셀업로드에 에러가 발생하였습니다.\n\n"
-                                    "{0} Cell의 값이 허용길이를 초과하였습니다".format(errColumns[2:]),
-                                    QMessageBox.Close)
-
-        else:
-            for xlrow in ws.iter_rows(row_offset=1):
-                if xlrow[0].row > last_row: break;
-                else:
-                    col_idx = 0
-                    # 리스트에 추가될 레코드
-                    record = {}
-                    for cell in xlrow:
-                        record[columnDictionary[col_idx]['colName']] = cell.value
-                        col_idx += 1
-                    recList.append(record)
-
-
-        return recList
+            self.searchSql()
 
     def downSqlUploadExcelSample(self):
         bufSize = 1024
