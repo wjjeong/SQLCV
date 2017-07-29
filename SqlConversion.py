@@ -19,11 +19,15 @@ class MyWindow(QMainWindow, form_class):
         super().__init__()
         self.setupUi(self)
 
+        #체크된 row
+        self.checkedRows = set([])
+
         #button 클릭 정의
         self.btnSqlMngSearch.clicked.connect(self.searchSql)
         self.btnSaveSqlInsertExcel.clicked.connect(self.saveSqlInsertExcel)
         self.btnDownSqlUploadExcelSample.clicked.connect(self.downSqlUploadExcelSample)
         self.btnDownSqlListExcel.clicked.connect(self.downSqlListExcel)
+        self.btnActSQLConversion.clicked.connect(self.doSqlConversion)
 
         #TableWidget 클릭 연결
         self.tblwSqlMngSqlList.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -144,44 +148,49 @@ class MyWindow(QMainWindow, form_class):
         tblSqlList.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         # tblSqlList.resizeRowsToContents()
 
+        # 체크된 row-list 초기화
+        self.checkedRows.clear()
+
     def handleItemClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
             # print("체크되었네요", item.row())
             self.setColortoRow(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(85,170,255))
+            self.checkedRows.add(item.row())
         else:
             # print("체크되지 않았네요")
             self.setColortoRow(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(255, 255, 255))
+            if item.row() in self.checkedRows: self.checkedRows.remove(item.row());
 
-            file_nm = self.tblwSqlMngSqlList.item(item.row(), 1).text()
-            sql_id  = self.tblwSqlMngSqlList.item(item.row(), 2).text()
+        file_nm = self.tblwSqlMngSqlList.item(item.row(), 1).text()
+        sql_id  = self.tblwSqlMngSqlList.item(item.row(), 2).text()
 
-            try:
-                con = dbconn.createConnection('PGS')
-                cur = con.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            con = dbconn.createConnection('PGS')
+            cur = con.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-                qrystr = """select 
-                            A.file_nm, A.sql_id, 
-                            string_agg(A.sql_text, chr(10) order by A.line asc) as asis_sql,
-                            string_agg(B.sql_text, chr(10) order by B.line asc) as tobe_sql
-                        from
-                            B2EN_SC_SQL_TEXT A
-                            left outer join B2EN_SC_SQL_TEXT_RST B on A.file_nm = B.file_nm and A.sql_id = B.sql_id and A.line = B.line
-                        where
-                            A.file_nm = '{0}' and A.sql_id = '{1}'
-                        group by A.file_nm, A.sql_id""".format(file_nm, sql_id)
-                print(qrystr)
+            qrystr = """select 
+                        A.file_nm, A.sql_id, 
+                        string_agg(A.sql_text, chr(10) order by A.line asc) as asis_sql,
+                        string_agg(B.sql_text, chr(10) order by B.line asc) as tobe_sql
+                    from
+                        B2EN_SC_SQL_TEXT A
+                        left outer join B2EN_SC_SQL_TEXT_RST B on A.file_nm = B.file_nm and A.sql_id = B.sql_id and A.line = B.line
+                    where
+                        A.file_nm = '{0}' and A.sql_id = '{1}'
+                    group by A.file_nm, A.sql_id""".format(file_nm, sql_id)
+            print(qrystr)
 
-                cur.execute(qrystr)
-                rows = cur.fetchall()
-            except Exception as e:
-                print("Exception 발생 : ", e);
-                sys.exit(app.exec())
-            finally:
-                con.close()
-                con = None
+            cur.execute(qrystr)
+            rows = cur.fetchall()
 
             self.txbSqlMngAsisSQL.setText(rows[0].get("asis_sql"))
             self.txbSqlMngTobeSQL.setText(rows[0].get("tobe_sql"))
+        except Exception as e:
+            print("Exception 발생 : ", e);
+            sys.exit(app.exec())
+        finally:
+            con.close()
+            con = None
 
     def handleItemDoubleClicked(self, item):
         print(item.row(),"가 더블클릭 되었습니다")
@@ -228,6 +237,8 @@ class MyWindow(QMainWindow, form_class):
                     sqlId       = sqlRec['sqlId']
                     jobCl       = sqlRec['jobCl']
                     sqlTextList = sqlRec['sqlTextList']
+                    sqlFullText = "\n".join(sqlTextList)
+                    qryCl       = commfunc.getQueryType(sqlFullText)
 
                     ## B2EN_SC_SQL_LIST에서 해당 쿼리 삭제
                     cur.execute("DELETE FROM B2EN_SC_SQL_LIST WHERE file_nm = %s and sql_id = %s", (fileNm, sqlId))
@@ -245,7 +256,7 @@ class MyWindow(QMainWindow, form_class):
 
                     ## B2EN_SC_SQL_LIST 테이블에 입력
                     cur.execute("insert into B2EN_SC_SQL_LIST (file_nm, sql_id, job_cl, qry_cl, wk_stat_cd, rgs_dttm) values (%s, %s, %s, %s, 'R', now())", \
-                             (fileNm, sqlId, jobCl, 'SELECT'))
+                             (fileNm, sqlId, jobCl, qryCl))
 
                     lineNum = 1
                     for qryLineStr in sqlTextList:
@@ -324,7 +335,16 @@ class MyWindow(QMainWindow, form_class):
 
             wb.save(filename=fileName[0])
 
+    def doSqlConversion(self):
+        if len(self.checkedRows) == 0:
+            QMessageBox.warning(self, 'Convert Failure', "선택된 SQL이 없습니다.\nSQL을 선택해주십시오",
+                                    QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            for checkedRow in self.checkedRows:
+                file_nm = self.tblwSqlMngSqlList.item(checkedRow, 1).text()
+                sql_id = self.tblwSqlMngSqlList.item(checkedRow, 2).text()
 
+                print(file_nm, ":", sql_id)
 
 
 if __name__ == "__main__":

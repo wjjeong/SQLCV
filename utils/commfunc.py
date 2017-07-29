@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import sqlparse
+from sqlparse.sql import Identifier, IdentifierList, Parenthesis, Where, Statement
+from sqlparse.tokens import Keyword, DML, Punctuation
 from PyQt5.QtWidgets import QMessageBox
 def getExcelData(workbook, columnDictionary, SheetName='Sheet1'):
     ws = workbook.get_sheet_by_name(SheetName)
@@ -55,3 +58,13 @@ def getExcelData(workbook, columnDictionary, SheetName='Sheet1'):
                 recList.append(record)
 
     return recList
+
+def getQueryType(sqlstr):
+    qryType = "UNKNOWN"
+    parsed = sqlparse.parse(sqlstr)[0]
+    for item in parsed.tokens:
+        if item.ttype is Keyword.DML:
+            qryType = item.value.upper()
+            break
+
+    return qryType
