@@ -44,7 +44,7 @@ class CompareQueryWindow(QDialog, form_class):
                             inner join B2EN_SC_SQL_TEXT_RST B on A.file_nm = B.file_nm and A.sql_id = B.sql_id and A.line = B.line
                         where
                             A.file_nm = '{0}' and A.sql_id = '{1}'""".format(file_nm, sql_id)
-            print(qrystr)
+            #print(qrystr)
 
             cur.execute(qrystr)
             rows = cur.fetchall()
@@ -56,7 +56,7 @@ class CompareQueryWindow(QDialog, form_class):
 
         self.tblSqlCompare.setRowCount(len(rows))
 
-        print(rows)
+        #print(rows)
         rownum = 0
         for row in rows:
             self.tblSqlCompare.setItem(rownum, 0, QTableWidgetItem(row.get("asis_sql_text")))

@@ -92,7 +92,7 @@ class MyWindow(QMainWindow, form_class):
             if listType == 2:
                 qrystr += " GROUP BY A.file_nm, A.sql_id, A.job_cl, A.qry_cl, A.wk_stat_cd, A.rgs_dttm"
 
-            print(qrystr)
+            #print(qrystr)
 
             cur.execute(qrystr)
             rows = cur.fetchall()
@@ -176,7 +176,7 @@ class MyWindow(QMainWindow, form_class):
                     where
                         A.file_nm = '{0}' and A.sql_id = '{1}'
                     group by A.file_nm, A.sql_id""".format(file_nm, sql_id)
-            print(qrystr)
+            #print(qrystr)
 
             cur.execute(qrystr)
             rows = cur.fetchall()
@@ -298,7 +298,7 @@ class MyWindow(QMainWindow, form_class):
         bufSize = 1024
 
         fileName = QFileDialog.getSaveFileName(self, "saveFile", "./SQLUploadSample.xlsx")
-        print(fileName[0])
+        #print(fileName[0])
         #출력파일 체크
         if fileName[0] != '':
             f = open('SQLUploadSample.xlsx', 'rb')
