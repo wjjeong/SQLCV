@@ -25,7 +25,6 @@ class MyWindow(QMainWindow, form_class, DBase):
                 key_to_read = r'SOFTWARE\PostgreSQL'
                 reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
                 k = winreg.OpenKey(reg, key_to_read)
-
                 print(k)
                 print("PostgreSQL 설치 확인 완료")
 
