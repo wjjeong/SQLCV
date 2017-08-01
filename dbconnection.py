@@ -7,6 +7,7 @@ from DBaseClass import DBase
 import configparser
 import os
 import logging
+import winreg
 
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
 form_class = uic.loadUiType("dbconnection.ui")[0]
@@ -20,8 +21,13 @@ class MyWindow(QMainWindow, form_class, DBase):
             self.setupUi(self)
 
             #설정된 경로가 존재하는지 확인하는 함수(있다면 자동연결, 없을 시 환경설정 창 띄우기)
-            if os.path.exists("C:\Program Files\PostgreSQL") :
-                print("PostgreSQL 설치 확인완료")
+            try:
+                key_to_read = r'SOFTWARE\PostgreSQL'
+                reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+                k = winreg.OpenKey(reg, key_to_read)
+
+                print(k)
+                print("PostgreSQL 설치 확인 완료")
 
                 if os.path.exists("config.ini") :
                     config = configparser.ConfigParser()
@@ -60,9 +66,9 @@ class MyWindow(QMainWindow, form_class, DBase):
                     self.lineEdit_5.setText("1234")
 
                     print("config.ini 파일 없어서 새로 생성")
-            else :
+            except:
                 print("PostgreSQL 설치 안됨")
-                QMessageBox.about(self, "오류", "PostgreDB가 설치되어 있지 않습니다.")
+                QMessageBox.about(self, "오류", "PostgreSQL이 설치되어 있지 않습니다.")
 
             self.pushButton.clicked.connect(self.dbconnect)
         except:
