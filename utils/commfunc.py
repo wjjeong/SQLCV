@@ -68,3 +68,8 @@ def getQueryType(sqlstr):
             break
 
     return qryType
+
+
+def setTableWidgetRowColor(table, rowIndex, color):
+    for j in range(table.columnCount()):
+        table.item(rowIndex, j).setBackground(color)

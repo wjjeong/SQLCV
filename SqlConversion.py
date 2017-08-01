@@ -5,10 +5,12 @@ import datetime
 
 import psycopg2
 import psycopg2.extras
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QFileDialog, QMessageBox, QAbstractItemView)
-from openpyxl import (load_workbook, Workbook)
+import DialogCompareQuery
 
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QDialog, QFileDialog, QMessageBox, QAbstractItemView)
+
+from openpyxl import (load_workbook, Workbook)
 from utils import (dbconn, commfunc)
 
 ui_folder = os.path.abspath(os.path.dirname('__ui__/'))
@@ -33,10 +35,6 @@ class MyWindow(QMainWindow, form_class):
         self.tblwSqlMngSqlList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tblwSqlMngSqlList.itemClicked.connect(self.handleItemClicked)
         self.tblwSqlMngSqlList.doubleClicked.connect(self.handleItemDoubleClicked)
-
-    def setColortoRow(self, table, rowIndex, color):
-        for j in range(table.columnCount()):
-            table.item(rowIndex, j).setBackground(color)
 
     def getSqlList(self, listType=1):
         valQryCl = self.cbSqlMngQryCl.currentText()
@@ -154,11 +152,11 @@ class MyWindow(QMainWindow, form_class):
     def handleItemClicked(self, item):
         if item.checkState() == QtCore.Qt.Checked:
             # print("체크되었네요", item.row())
-            self.setColortoRow(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(85,170,255))
+            commfunc.setTableWidgetRowColor(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(85,170,255))
             self.checkedRows.add(item.row())
         else:
             # print("체크되지 않았네요")
-            self.setColortoRow(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(255, 255, 255))
+            commfunc.setTableWidgetRowColor(self.tblwSqlMngSqlList, item.row(), QtGui.QColor(255, 255, 255))
             if item.row() in self.checkedRows: self.checkedRows.remove(item.row());
 
         file_nm = self.tblwSqlMngSqlList.item(item.row(), 1).text()
@@ -193,7 +191,19 @@ class MyWindow(QMainWindow, form_class):
             con = None
 
     def handleItemDoubleClicked(self, item):
-        print(item.row(),"가 더블클릭 되었습니다")
+        #print(item.row(),"가 더블클릭 되었습니다")
+        file_nm = self.tblwSqlMngSqlList.item(item.row(), 1).text()
+        sql_id = self.tblwSqlMngSqlList.item(item.row(), 2).text()
+        conversionYn = self.tblwSqlMngSqlList.item(item.row(), 4).text()
+
+        if conversionYn == "N":
+            QMessageBox.warning(self, 'No Conversioned SQL', "SQL 비교분석은 컨버전 완료된 SQL만 가능합니다.",
+                                QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            compareQuery = DialogCompareQuery.CompareQueryWindow()
+            compareQuery.viewCompareQuery(file_nm, sql_id)
+            compareQuery.show()
+            compareQuery.exec_()
 
     #SQL 엑셀 업로드
     def saveSqlInsertExcel(self):
