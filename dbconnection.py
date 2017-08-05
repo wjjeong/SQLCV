@@ -1,5 +1,6 @@
 import sys
 import psycopg2 as pg2
+import psycopg2.extras
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
@@ -21,53 +22,42 @@ class MyWindow(QMainWindow, form_class, DBase):
             self.setupUi(self)
 
             #설정된 경로가 존재하는지 확인하는 함수(있다면 자동연결, 없을 시 환경설정 창 띄우기)
-            try:
-                key_to_read = r'SOFTWARE\PostgreSQL'
-                reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
-                k = winreg.OpenKey(reg, key_to_read)
-                print(k)
-                print("PostgreSQL 설치 확인 완료")
+            if os.path.exists("config.ini"):
+                config = configparser.ConfigParser()
+                config.read('config.ini')
 
-                if os.path.exists("config.ini") :
-                    config = configparser.ConfigParser()
-                    config.read('config.ini')
+                logging.debug(config['DBINFO']['host'])
 
-                    logging.debug(config['DBINFO']['host'])
+                getHost = config['DBINFO']['host']  # config.ini에 DBINFO 섹션을 읽어옴
+                getDbname = config['DBINFO']['dbname']
+                getPort = config['DBINFO']['port']
+                getUser = config['DBINFO']['user']
+                getPassword = config['DBINFO']['password']
 
-                    getHost = config['DBINFO']['host']  # config.ini에 DBINFO 섹션을 읽어옴
-                    getDbname = config['DBINFO']['dbname']
-                    getPort = config['DBINFO']['port']
-                    getUser = config['DBINFO']['user']
-                    getPassword = config['DBINFO']['password']
+                self.lineEdit.setText(getHost)  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
+                self.lineEdit_2.setText(getDbname)
+                self.lineEdit_3.setText(getPort)
+                self.lineEdit_4.setText(getUser)
+                self.lineEdit_5.setText(getPassword)
 
-                    self.lineEdit.setText(getHost)  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
-                    self.lineEdit_2.setText(getDbname)
-                    self.lineEdit_3.setText(getPort)
-                    self.lineEdit_4.setText(getUser)
-                    self.lineEdit_5.setText(getPassword)
+                print("config.ini 파일 있음")
 
-                    print("config.ini 파일 있음")
+            else:
+                fw = open('config.ini', 'w')
+                fw.write('[DBINFO]\n')
+                fw.write('host = localhost\n')
+                fw.write('dbname = postgres\n')
+                fw.write('port = 5432\n')
+                fw.write('user = postgres\n')
+                fw.write('password = \n')
+                fw.close
 
-                else :
-                    fw = open('config.ini', 'w')
-                    fw.write('[DBINFO]\n')
-                    fw.write('host = localhost\n')
-                    fw.write('dbname = postgres\n')
-                    fw.write('port = 5432\n')
-                    fw.write('user = postgres\n')
-                    fw.write('password = 1234\n')
-                    fw.close
+                self.lineEdit.setText("localhost")
+                self.lineEdit_2.setText("postgres")
+                self.lineEdit_3.setText("5432")
+                self.lineEdit_4.setText("postgres")
 
-                    self.lineEdit.setText("localhost")  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
-                    self.lineEdit_2.setText("postgres")
-                    self.lineEdit_3.setText("5432")
-                    self.lineEdit_4.setText("postgres")
-                    self.lineEdit_5.setText("1234")
-
-                    print("config.ini 파일 없어서 새로 생성")
-            except:
-                print("PostgreSQL 설치 안됨")
-                QMessageBox.about(self, "오류", "PostgreSQL이 설치되어 있지 않습니다.")
+                print("config.ini 파일 없어서 새로 생성")
 
             self.pushButton.clicked.connect(self.dbconnect)
         except:
@@ -82,33 +72,42 @@ class MyWindow(QMainWindow, form_class, DBase):
             inputUser = self.lineEdit_4.text()
             inputPassword = self.lineEdit_5.text()
             conn_string = "host='" + inputHost + "' dbname='" + inputDbname + "' port='" + inputPort + "' user='" + inputUser + "' password='" + inputPassword + "'"
-            self._db_connection = pg2.connect(conn_string)     # 저장된 변수를 이용해 DB접속
+            db_connection = pg2.connect(conn_string)     # 저장된 변수를 이용해 DB접속
 
-            config = configparser.ConfigParser()
-            config.read('config.ini')
-            config.remove_section('DBINFO')     # 현재 config.ini에 저장되어 있는 DBINFO 섹션 삭제
-            with open('config.ini', 'w') as configfile:
-                config.write(configfile)
+            try:
+                #con = dbconn.createConnection('PGS')
+                cur = db_connection.cursor(cursor_factory=pg2.extras.RealDictCursor)
 
-            config.add_section('DBINFO')     # 새로 입력한 접속정보를 config.ini의 DBINFO 섹션에 저장
-            config.set('DBINFO', 'host', inputHost)
-            config.set('DBINFO', 'dbname', inputDbname)
-            config.set('DBINFO', 'port', inputPort)
-            config.set('DBINFO', 'user', inputUser)
-            config.set('DBINFO', 'password', inputPassword)
-            with open('config.ini', 'w') as configfile:
-                config.write(configfile)
+                qrystr = """select 1"""
+                print(qrystr)
+                cur.execute(qrystr)
 
-            print("DB 접속 성공")
-            QMessageBox.about(self, "성공", "DB 접속 성공")
+                config = configparser.ConfigParser()
+                config.read('config.ini')
+                config.remove_section('DBINFO')  # 현재 config.ini에 저장되어 있는 DBINFO 섹션 삭제
+                with open('config.ini', 'w') as configfile:
+                    config.write(configfile)
 
-            #창 종료
-            #myWindow.close()
-            #의문사항 : 창 종료하면서 Connect 정보를 가져가는지??어떻게?
+                config.add_section('DBINFO')  # 새로 입력한 접속정보를 config.ini의 DBINFO 섹션에 저장
+                config.set('DBINFO', 'host', inputHost)
+                config.set('DBINFO', 'dbname', inputDbname)
+                config.set('DBINFO', 'port', inputPort)
+                config.set('DBINFO', 'user', inputUser)
+                config.set('DBINFO', 'password', inputPassword)
+                with open('config.ini', 'w') as configfile:
+                    config.write(configfile)
+
+                print("DB 접속 성공")
+                QMessageBox.about(self, "성공", "DB 접속 성공")
+
+            except Exception as e:
+                print("Exception 발생 : ", e)
+                #QMessageBox.about(self, "오류", "PostgreSQL이 설치되지 않았습니다.")
+                sys.exit(app.exec())
 
         except:
             print("DB 접속 실패")
-            QMessageBox.about(self, "오류", "DB 정보가 올바르지 않습니다.")
+            QMessageBox.about(self, "오류", "DB 접속정보가 올바르지 않습니다.")
 
 
 if __name__ == "__main__":
