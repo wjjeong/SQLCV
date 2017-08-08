@@ -2,13 +2,15 @@
 
 import os
 import datetime
+import time
 
 import psycopg2
 import psycopg2.extras
 import DialogCompareQuery
+import SqlConvLogic
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QDialog, QFileDialog, QMessageBox, QAbstractItemView)
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QTableWidgetItem, QDialog, QFileDialog, QMessageBox, QAbstractItemView, QProgressBar)
 
 from openpyxl import (load_workbook, Workbook)
 from utils import (dbconn, commfunc)
@@ -35,6 +37,8 @@ class MyWindow(QMainWindow, form_class):
         self.tblwSqlMngSqlList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tblwSqlMngSqlList.itemClicked.connect(self.handleItemClicked)
         self.tblwSqlMngSqlList.doubleClicked.connect(self.handleItemDoubleClicked)
+
+        self.pbSqlConversion.hide()
 
     def getSqlList(self, listType=1):
         valQryCl = self.cbSqlMngQryCl.currentText()
@@ -346,16 +350,36 @@ class MyWindow(QMainWindow, form_class):
             wb.save(filename=fileName[0])
 
     def doSqlConversion(self):
+        totNum = len(self.checkedRows)
+
         if len(self.checkedRows) == 0:
             QMessageBox.warning(self, 'Convert Failure', "선택된 SQL이 없습니다.\nSQL을 선택해주십시오",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
-            for checkedRow in self.checkedRows:
-                file_nm = self.tblwSqlMngSqlList.item(checkedRow, 1).text()
-                sql_id = self.tblwSqlMngSqlList.item(checkedRow, 2).text()
+            try:
+                self.pbSqlConversion.setValue(0)
+                self.leExcelPath.hide()
+                self.pbSqlConversion.show()
 
-                print(file_nm, ":", sql_id)
+                currNum = 0
 
+                for checkedRow in self.checkedRows:
+                    file_nm = self.tblwSqlMngSqlList.item(checkedRow, 1).text()
+                    sql_id = self.tblwSqlMngSqlList.item(checkedRow, 2).text()
+
+                    SqlConvLogic.run_sc(file_nm, sql_id)
+                    time.sleep(0.5)
+
+                    currNum += 1
+
+                    self.pbSqlConversion.setValue((currNum/totNum)*100)
+
+                QMessageBox.information(self, 'Convert Success', "SQL 컨버전이 완료되었습니다", QMessageBox.Ok, QMessageBox.Ok)
+            except Exception as e:
+                QMessageBox.warning(self, 'Convert Failure', "SQL 컨버전이 실패하였습니다\n아래 원인을 확인해주세요\n\n{0}".format(e), QMessageBox.Close, QMessageBox.Close)
+            finally:
+                self.pbSqlConversion.hide()
+                self.leExcelPath.show()
 
 if __name__ == "__main__":
     import sys
