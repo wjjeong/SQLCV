@@ -323,8 +323,10 @@ def run_sc(p_file_nm,p_sql_id):
     # 2. mapping_sql
     mapping_sql(p_file_nm, p_sql_id)
 
+    # 3. 작업상태 업데이트
 
     # print(1)
+
 
 
 def get_conn(p_db_type):
@@ -406,26 +408,26 @@ def split_sql(p_file_nm,p_sql_id):
     # print(sql)
 
 
-    sql = """SELECT     -- ZhnSql.xml : getJuminInfo
-        'A'     AS FLG
-      , ZHMA_NAME
-      , ZHMA_JUMIN_NO                       
-    FROM  TBZHMAST TZM
-   WHERE  TZM.ZHMA_MATCH_GB IN('0', '1', '3', '4')
-union all
-SELECT     -- ZhnSql.xml : getJuminInfo
-        'B'     AS FLG
-      , ZHER_NAME
-      , ZHER_JUMIN_NO1||ZHER_JUMIN_NO2 ZHER_JUMIN_NO                       
-    FROM  TBZHEROR TZM
-union all
-SELECT     -- ZhnSql.xml : getJuminInfo
-        'C'     AS FLG
-      , ZHER_NAME
-      , ZHER_JUMIN_NO1||ZHER_JUMIN_NO2 ZHER_JUMIN_NO
-    FROM  TBZHEROR TZM
-order by FLG,ZHMA_NAME,ZHMA_JUMIN_NO
-   """
+#     sql = """SELECT     -- ZhnSql.xml : getJuminInfo
+#         'A'     AS FLG
+#       , ZHMA_NAME
+#       , ZHMA_JUMIN_NO
+#     FROM  TBZHMAST TZM
+#    WHERE  TZM.ZHMA_MATCH_GB IN('0', '1', '3', '4')
+# union all
+# SELECT     -- ZhnSql.xml : getJuminInfo
+#         'B'     AS FLG
+#       , ZHER_NAME
+#       , ZHER_JUMIN_NO1||ZHER_JUMIN_NO2 ZHER_JUMIN_NO
+#     FROM  TBZHEROR TZM
+# union all
+# SELECT     -- ZhnSql.xml : getJuminInfo
+#         'C'     AS FLG
+#       , ZHER_NAME
+#       , ZHER_JUMIN_NO1||ZHER_JUMIN_NO2 ZHER_JUMIN_NO
+#     FROM  TBZHEROR TZM
+# order by FLG,ZHMA_NAME,ZHMA_JUMIN_NO
+#    """
 
 
     logging.debug(sql)
@@ -1804,6 +1806,20 @@ def mapping_sql(p_file_nm,p_sql_id):
 
     v_cur_text_rst.append(DtB2enScSqlTextRst(v_cur_rst[i-1].file_nm, v_cur_rst[i-1].sql_id, v_cur_rst[i - 2].line, v_sql_text_rst, ''))
     v_cur_text_rst[j].insert_db(conn, curs)
+
+
+    #작업상태 완료 업데이트
+
+
+    update_sql = """update b2en_sc_sql_list set wk_stat_cd = 'C'
+                   where file_nm = '"""+p_file_nm+"""' and sql_id = '"""+p_sql_id+"""'"""
+
+    # print(ifnull(str(self.pr_tab) ,"NULL"))
+    logging.debug(update_sql)
+    curs.execute(update_sql)
+    conn.commit()
+
+
 
 
 
