@@ -428,7 +428,7 @@ def split_sql(p_file_nm,p_sql_id):
 #     FROM  TBZHEROR TZM
 # order by FLG,ZHMA_NAME,ZHMA_JUMIN_NO
 #    """
-
+#
 
     logging.debug(sql)
     tmp = ''
