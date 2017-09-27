@@ -111,24 +111,24 @@ class MyWindow(QMainWindow, form_class, DBase):
                     if len(insert_row) == 8:
                         #sql_string = "insert into B2EN_SC_TAB_MAP values('%s','%s',%d);" % (insert_row[1], insert_row[2], insert_row[3])
                         sql_string = """with upsert as(
-                                           update B2EN_SC_COL_MAP set asis_logical_tab='%s', asis_logical_col='%s',
-                                                                      tobe_logical_tab='%s', tobe_logical_col='%s',
+                                           update B2EN_SC_COL_MAP set asis_logical_tab=UPPER('%s'), asis_logical_col=UPPER('%s'),
+                                                                      tobe_logical_tab=UPPER('%s'), tobe_logical_col=UPPER('%s'),
                                                                       rgs_dttm=current_timestamp
-                                           where asis_tab='%s'
-                                           and asis_col='%s'
-                                           and tobe_tab='%s'
-                                           and tobe_col='%s'
+                                           where UPPER(asis_tab)=UPPER('%s')
+                                           and UPPER(asis_col)=UPPER('%s')
+                                           and UPPER(tobe_tab)=UPPER('%s')
+                                           and UPPER(tobe_col)=UPPER('%s')
                                            returning *
                                     )
                                     insert into B2EN_SC_COL_MAP(asis_logical_tab,asis_tab,asis_logical_col,asis_col,tobe_logical_tab,tobe_tab,tobe_logical_col,tobe_col,rgs_dttm)
-                                    select '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', current_timestamp
+                                    select '%s', UPPER('%s'), '%s', UPPER('%s'), '%s', UPPER('%s'), '%s', UPPER('%s'), current_timestamp
                                     where not exists(
-                                                     select asis_tab, tobe_tab
+                                                     select UPPER(asis_tab), UPPER(tobe_tab)
                                                      from upsert
-                                                     where asis_tab='%s'
-                                                     and asis_col='%s'
-                                                     and tobe_tab='%s'
-                                                     and tobe_col='%s');
+                                                     where UPPER(asis_tab)=UPPER('%s')
+                                                     and UPPER(asis_col)=UPPER('%s')
+                                                     and UPPER(tobe_tab)=UPPER('%s')
+                                                     and UPPER(tobe_col)=UPPER('%s'));
                                  """ % (insert_row[1],insert_row[3],insert_row[5],insert_row[7],
                                               insert_row[2],insert_row[4],insert_row[6],insert_row[8],
                                               insert_row[1],insert_row[2],insert_row[3],insert_row[4],insert_row[5],insert_row[6],insert_row[7],insert_row[8],

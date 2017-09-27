@@ -127,17 +127,17 @@ class MyWindow(QMainWindow, form_class, DBase):
                         #sql_string = "insert into B2EN_SC_TAB_MAP values('%s','%s',%d);" % (insert_row[1], insert_row[2], insert_row[3])
                         sql_string = """with upsert as(
                                            update B2EN_SC_TAB_MAP set asis_logical_tab='%s', tobe_logical_tab='%s', col_cnt=%d, rgs_dttm=current_timestamp
-                                           where asis_tab='%s'
-                                           and tobe_tab='%s'
+                                           where UPPER(asis_tab)=UPPER('%s')
+                                           and UPPER(tobe_tab)=UPPER('%s')
                                            returning *
                                     )
                                     insert into B2EN_SC_TAB_MAP(asis_logical_tab, asis_tab, tobe_logical_tab, tobe_tab, col_cnt, rgs_dttm)
-                                    select '%s', '%s', '%s', '%s', %d, current_timestamp
+                                    select '%s', UPPER('%s'), '%s', UPPER('%s'), %d, current_timestamp
                                     where not exists(
                                                      select asis_tab, tobe_tab
                                                      from upsert
-                                                     where asis_tab='%s'
-                                                     and tobe_tab='%s');
+                                                     where UPPER(asis_tab)=UPPER('%s')
+                                                     and UPPER(tobe_tab)=UPPER('%s'));
                                  """ % (insert_row[1],insert_row[3],insert_row[5],
                                               insert_row[2],insert_row[4],
                                               insert_row[1],insert_row[2],insert_row[3],insert_row[4],insert_row[5],
