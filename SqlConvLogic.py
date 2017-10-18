@@ -1788,7 +1788,7 @@ def mapping_sql(p_file_nm,p_sql_id):
 
             v_line = v_cur_rst[i].line
 
-            if (i > 1) and (v_cur_rst[i].line != v_cur_rst[i - 1].line):
+            if (i > 0) and (v_cur_rst[i].line != v_cur_rst[i - 1].line):
                 v_cur_text_rst.append(DtB2enScSqlTextRst(v_cur_rst[i].file_nm,v_cur_rst[i].sql_id,v_cur_rst[i-1].line,v_sql_text_rst,''))
                 v_cur_text_rst[j].insert_db(conn, curs)
 
