@@ -1,13 +1,14 @@
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
+import os
+
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from DBaseClass import DBase
-import dbconnection
-import TableMapping
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import *
+
 import ColumnMapping
 import SqlConversion
+import TableMapping
+import dbconnection
 
 
 class MainWindow(QMainWindow):
@@ -29,7 +30,7 @@ class MainWindow(QMainWindow):
         file1.addAction("나가기")
 
         file2 = bar.addMenu("환경설정")
-        file2.addAction("DB접속")
+        file2.addAction("접속정보")
 
         file3 = bar.addMenu("기준정보")
         file3.addAction("테이블매핑")
@@ -49,7 +50,21 @@ class MainWindow(QMainWindow):
         file4.triggered[QAction].connect(self.windowaction)
         file5.triggered[QAction].connect(self.windowaction)
 
-        self.setWindowTitle("SQL변환프로그램")
+        self.setWindowTitle("SDC")
+        self.setWindowIcon(QIcon("__ui__"+os.path.sep+"img"+os.path.sep+"database_sql01.png"))
+
+        #SQL 변환을 기본으로 띄운다.
+        MainWindow.count = MainWindow.count + 1
+        sub = QMdiSubWindow()
+
+        myWindow = SqlConversion.MyWindow()
+        sub.setWidget(myWindow)
+        # sub.setWindowTitle("컬럼매핑" + str(MainWindow.count))
+        sub.setWindowTitle("SQL변환")
+        self.mdi.addSubWindow(sub)
+
+        sub.show()
+        sub.showMaximized()
 
     def windowaction(self, q):
         print("triggered")
@@ -57,14 +72,14 @@ class MainWindow(QMainWindow):
         if q.text() == "나가기":
             QCoreApplication.instance().quit()
 
-        if q.text() == "DB접속":
+        if q.text() == "접속정보":
             MainWindow.count = MainWindow.count + 1
             sub = QMdiSubWindow()
 
             myWindow = dbconnection.MyWindow()
             sub.setWidget(myWindow)
             # sub.setWindowTitle("테이블매핑" + str(MainWindow.count))
-            sub.setWindowTitle("DB접속")
+            sub.setWindowTitle("접속정보")
             self.mdi.addSubWindow(sub)
 
             sub.show()
@@ -110,18 +125,18 @@ class MainWindow(QMainWindow):
             sub.show()
             sub.showMaximized()
 
-       # if q.text() == "SQL등록":
-       #     MainWindow.count = MainWindow.count + 1
-       #     sub = QMdiSubWindow()
-       #
-       #     myWindow = SQLMapping.MyWindow()
-       #     sub.setWidget(myWindow)
-       #     #sub.setWindowTitle("컬럼매핑" + str(MainWindow.count))
-       #     sub.setWindowTitle("SQL등록")
-       #     self.mdi.addSubWindow(sub)
-       #
-       #     sub.show()
-       #     sub.showMaximized()
+            # if q.text() == "SQL등록":
+            #     MainWindow.count = MainWindow.count + 1
+            #     sub = QMdiSubWindow()
+            #
+            #     myWindow = SQLMapping.MyWindow()
+            #     sub.setWidget(myWindow)
+            #     #sub.setWindowTitle("컬럼매핑" + str(MainWindow.count))
+            #     sub.setWindowTitle("SQL등록")
+            #     self.mdi.addSubWindow(sub)
+            #
+            #     sub.show()
+            #     sub.showMaximized()
 
 
 

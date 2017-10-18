@@ -11,7 +11,9 @@ import logging
 import winreg
 
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
-form_class = uic.loadUiType("dbconnection.ui")[0]
+#form_class = uic.loadUiType("dbconnection.ui")[0]
+ui_folder = os.path.abspath(os.path.dirname('__ui__/'))
+form_class = uic.loadUiType(os.path.join(ui_folder, "DBConnectionInfo.ui"))[0]
 
 class MyWindow(QMainWindow, form_class, DBase):
     def __init__(self):
@@ -34,11 +36,11 @@ class MyWindow(QMainWindow, form_class, DBase):
                 getUser = config['DBINFO']['user']
                 getPassword = config['DBINFO']['password']
 
-                self.lineEdit.setText(getHost)  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
-                self.lineEdit_2.setText(getDbname)
-                self.lineEdit_3.setText(getPort)
-                self.lineEdit_4.setText(getUser)
-                self.lineEdit_5.setText(getPassword)
+                self.leConnServer.setText(getHost)  # 읽어온 DBINFO 섹션정보를 텍스트박스에 세팅함
+                self.leConnDbname.setText(getDbname)
+                self.leConnPort.setText(getPort)
+                self.leConnUsername.setText(getUser)
+                self.leConnPasswd.setText(getPassword)
 
                 print("config.ini 파일 있음")
 
@@ -52,25 +54,26 @@ class MyWindow(QMainWindow, form_class, DBase):
                 fw.write('password = \n')
                 fw.close
 
-                self.lineEdit.setText("localhost")
-                self.lineEdit_2.setText("postgres")
-                self.lineEdit_3.setText("5432")
-                self.lineEdit_4.setText("postgres")
+                self.leConnServer.setText("localhost")
+                self.leConnDbname.setText("postgres")
+                self.leConnPort.setText("5432")
+                self.leConnUsername.setText("postgres")
+                self.leConnPasswd.setText("")
 
                 print("config.ini 파일 없어서 새로 생성")
 
-            self.pushButton.clicked.connect(self.dbconnect)
+            self.btnSave.clicked.connect(self.dbconnect)
         except:
             print("DB 접속 실패")
             QMessageBox.about(self, "오류", "설정정보가 올바르지 않습니다.")
 
     def dbconnect(self):
         try:
-            inputHost = self.lineEdit.text()    # 텍스트박스에 있는 정보들을 변수에 저장함
-            inputDbname = self.lineEdit_2.text()
-            inputPort = self.lineEdit_3.text()
-            inputUser = self.lineEdit_4.text()
-            inputPassword = self.lineEdit_5.text()
+            inputHost = self.leConnServer.text()    # 텍스트박스에 있는 정보들을 변수에 저장함
+            inputDbname = self.leConnDbname.text()
+            inputPort = self.leConnPort.text()
+            inputUser = self.leConnUsername.text()
+            inputPassword = self.leConnPasswd.text()
             conn_string = "host='" + inputHost + "' dbname='" + inputDbname + "' port='" + inputPort + "' user='" + inputUser + "' password='" + inputPassword + "'"
             db_connection = pg2.connect(conn_string)     # 저장된 변수를 이용해 DB접속
 
@@ -98,7 +101,7 @@ class MyWindow(QMainWindow, form_class, DBase):
                     config.write(configfile)
 
                 print("DB 접속 성공")
-                QMessageBox.about(self, "성공", "DB 접속 성공")
+                QMessageBox.about(self, "성공", "DB 접속정보가 저장되었습니다.")
 
             except Exception as e:
                 print("Exception 발생 : ", e)
@@ -107,7 +110,7 @@ class MyWindow(QMainWindow, form_class, DBase):
 
         except:
             print("DB 접속 실패")
-            QMessageBox.about(self, "오류", "DB 접속정보가 올바르지 않습니다.")
+            QMessageBox.warning(self, "오류", "DB 접속정보가 올바르지 않습니다.")
 
 
 if __name__ == "__main__":
