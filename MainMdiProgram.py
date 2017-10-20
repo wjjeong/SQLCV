@@ -9,6 +9,7 @@ import ColumnMapping
 import SqlConversion
 import TableMapping
 import dbconnection
+import DialogAbout
 
 
 class MainWindow(QMainWindow):
@@ -26,32 +27,37 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mdi)
         bar = self.menuBar()
 
-        file1 = bar.addMenu("파일")
+        file1 = bar.addMenu("File")
+        file1.addAction("접속정보")
         file1.addAction("나가기")
 
-        file2 = bar.addMenu("환경설정")
-        file2.addAction("접속정보")
+        #file2 = bar.addMenu("환경설정")
+        #file2.addAction("접속정보")
 
-        file3 = bar.addMenu("기준정보")
+        file3 = bar.addMenu("Mapping")
         file3.addAction("테이블매핑")
         file3.addAction("컬럼매핑")
 
-        file4 = bar.addMenu("SQL정보")
+        file4 = bar.addMenu("Conversion")
         # file4.addAction("SQL등록")
         file4.addAction("SQL변환")
 
-        file5 = bar.addMenu("윈도우")
+        file5 = bar.addMenu("Window")
         file5.addAction("Cascade")
         file5.addAction("Tiled")
 
+        file6 = bar.addMenu("Help")
+        file6.addAction("About")
+
         file1.triggered[QAction].connect(self.windowaction)
-        file2.triggered[QAction].connect(self.windowaction)
+        #file2.triggered[QAction].connect(self.windowaction)
         file3.triggered[QAction].connect(self.windowaction)
         file4.triggered[QAction].connect(self.windowaction)
         file5.triggered[QAction].connect(self.windowaction)
+        file6.triggered[QAction].connect(self.windowaction)
 
         self.setWindowTitle("SDC")
-        self.setWindowIcon(QIcon("__ui__"+os.path.sep+"img"+os.path.sep+"database_sql01.png"))
+        self.setWindowIcon(QIcon("__ui__"+os.path.sep+"img"+os.path.sep+"icon_sdc.ico"))
 
         #SQL 변환을 기본으로 띄운다.
         MainWindow.count = MainWindow.count + 1
@@ -67,8 +73,6 @@ class MainWindow(QMainWindow):
         sub.showMaximized()
 
     def windowaction(self, q):
-        print("triggered")
-
         if q.text() == "나가기":
             QCoreApplication.instance().quit()
 
@@ -145,6 +149,12 @@ class MainWindow(QMainWindow):
 
         if q.text() == "Tiled":
             self.mdi.tileSubWindows()
+
+        if q.text() == "About":
+            aboutWindow = DialogAbout.AboutWindow()
+            aboutWindow.show()
+            aboutWindow.exec_()
+
 
 def main():
     app = QApplication(sys.argv)

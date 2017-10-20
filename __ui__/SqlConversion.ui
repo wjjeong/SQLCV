@@ -374,8 +374,5 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="icons.qrc"/>
- </resources>
  <connections/>
 </ui>
